@@ -27,11 +27,11 @@ class WorkerAdmin(admin.ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-	pass
+	list_display = ("name","company",)
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-	pass
+	list_display = ("name","customer",)
 
 @admin.register(CustomerOffer)
 class CustomerOfferAdmin(admin.ModelAdmin):
