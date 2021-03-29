@@ -1,10 +1,12 @@
 from django.db import models
 from djrichtextfield.models import RichTextField
 
+import datetime
+
 # Create your models here.
 
 class Default(models.Model):
-	key = models.CharField(max_length=255)
+	key = models.CharField(max_length=255,unique=True)
 	value = models.CharField(max_length=255)
 	def __str__(self):
 		return self.key
@@ -16,6 +18,8 @@ class WorkerType(models.Model):
 		return self.name
 
 class InvoicingData(models.Model):
+	class Meta:
+		verbose_name_plural = "Invoicing data"
 	name = models.CharField(max_length=255)
 	street = models.CharField(max_length=255,null=True,blank=True,
 								help_text="Include street and number.")
@@ -27,7 +31,7 @@ class InvoicingData(models.Model):
 							help_text="Bank account number.")
 	swift = models.CharField(max_length=10,null=True,blank=True)
 	def __str__(self):
-		return "{} - {} - [{}]".format(self.name,self.vat_code,self.id)
+		return "{} - {}".format(self.name,self.vat_code)
 
 class Worker(models.Model):
 	name = models.CharField(max_length=255)
@@ -78,13 +82,31 @@ class WorkerOffer(models.Model):
 	def __str__(self):
 		return "[{}] {} - {}".format(self.project,self.worker,self.name)
 
+INVOICE_NUMBER_KEY = "invoice_number"
+def get_invoice_number():
+	defaults = Default.objects.filter(key=INVOICE_NUMBER_KEY)
+	next_number = None
+	if not defaults:
+		# create default number if does not exist
+		next_number = Default()
+		next_number.key = INVOICE_NUMBER_KEY
+		next_number.value = "1"
+		next_number.save()
+	else:
+		next_number = defaults[0]
+	# TODO: add PREFIX and custom invoice number format
+	# get year
+	year = datetime.date.today().year
+	return "{}{:03d}".format(year,int(next_number.value))
+
 class ActiveInvoice(models.Model):
-	number = models.CharField(max_length=255)
+	number = models.CharField(max_length=255,default=get_invoice_number)
 	date = models.DateField()
-	customer_offer = models.OneToOneField(CustomerOffer,on_delete=models.CASCADE)
+	issuer = models.ForeignKey(InvoicingData,on_delete=models.CASCADE)
+	customer_offer = models.ForeignKey(CustomerOffer,on_delete=models.CASCADE)
 	# TODO: review include items in model
-	invoicing_data = models.OneToOneField(InvoicingData,on_delete=models.CASCADE)
-	name = models.CharField(max_length=255)
+	customer = models.ForeignKey(Customer,on_delete=models.CASCADE)
+	name = models.CharField(max_length=255,help_text="Offer name")
 	description = RichTextField()
 	project = models.ForeignKey(Project,on_delete=models.CASCADE)
 	price = models.DecimalField(max_digits=8,decimal_places=2,null=True,blank=True)
@@ -110,6 +132,8 @@ class PassiveInvoice(models.Model):
 		return self.number
 
 class Functionality(models.Model):
+	class Meta:
+		verbose_name_plural = "Functionalities"
 	name = models.CharField(max_length=255)
 	description = RichTextField()
 	average_hourly_effort = models.DecimalField(max_digits=5,decimal_places=1)
@@ -128,5 +152,5 @@ class OfferFunctionalityWorker(models.Model):
 	worked_hourly_effort = models.DecimalField(max_digits=5,decimal_places=1)
 	price = models.DecimalField(max_digits=8,decimal_places=2)
 	def __str__(self):
-		return "{} - {} - {}".format(self.offer,self.funcionality,self.worker)
+		return "{} - {} - {}".format(self.offer,self.functionality,self.worker)
 

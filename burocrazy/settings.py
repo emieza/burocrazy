@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # plugins
     'djrichtextfield',
+    'admin_reorder',
     # apps
     'cuore',
 ]
@@ -59,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'admin_reorder.middleware.ModelAdminReorder',
 ]
 
 ROOT_URLCONF = 'burocrazy.urls'
@@ -143,3 +145,39 @@ DJRICHTEXTFIELD_CONFIG = {
     }
 }
 
+ADMIN_REORDER = (
+    # Keep original label and models
+    'auth',
+
+    {   
+        'app': 'cuore',
+        'label': 'common',
+        'models': (
+            'cuore.Default',
+            'cuore.Project',
+            'cuore.InvoicingData',
+            'cuore.Functionality',
+            'cuore.OfferFunctionalityWorker',
+            ),
+    },
+    {
+        'app': 'cuore',
+        'label': 'workers',
+        'models': (
+            'cuore.WorkerType',
+            'cuore.Worker',
+            'cuore.WorkerOffer',
+            'cuore.PassiveInvoice',
+            ),
+    },
+    {
+        'app': 'cuore',
+        'label': 'customers',
+        'models': (
+            'cuore.Customer',
+            'cuore.CustomerOffer',
+            'cuore.ActiveInvoice',
+
+            )
+    },
+)
